@@ -9,8 +9,10 @@ public class Sim {
     MBTA mbta;
     Log log;
     List<String> curr_passenger_trips;
-    boolean is_forward = true;
+    boolean is_recent_onboard = false;
     boolean should_onboard_newline = false;
+    Train curr_train_tracker = null;
+    Station curr_station_tracker = null;
     PassengerThread(Passenger passenger, MBTA mbta, Log log) {
       this.mbta = mbta;
       this.passenger = passenger;
@@ -24,77 +26,78 @@ public class Sim {
       while (!mbta.trips.get(curr_passenger.toString()).isEmpty()) {
 
         Station curr_station = null;
-        Station next_station = null;
+        Station next_train_station = null;
         Train curr_train = null;
+        String next_passenger_station = "";
 
-        System.out.println(mbta.curr_mbta_state);
-
-        // Get the current station based on current passenger
+        // Get the current station
         for (Station s : mbta.curr_mbta_state) {
-          boolean is_train_contain_passenger = false;
-          for(List i : s.train.values()) {
-            if(i.contains(curr_passenger)) {
-
-            }
-          }
-          if (s.passengers.contains(curr_passenger) || (!s.train.isEmpty() && s.train.values().contains(curr_passenger))) {
+          if (s.passengers.contains(curr_passenger)) {
             curr_station = s;
             break;
           }
         }
-        System.out.println("Current Station: " + curr_station);
-        // Get the next destination on the passenger's trip
-        String next_passenger_station = "";
-        if(mbta.trips.get(curr_passenger.toString()).size() > 1) {
-          next_passenger_station = mbta.trips.get(curr_passenger.toString()).get(mbta.trips.get(curr_passenger.toString()).indexOf(curr_station.toString()) + 1);
+
+        if (curr_station == null) {
+          for (Station s : mbta.curr_mbta_state) {
+            if (!s.train.isEmpty()) {
+              for (Map.Entry<Train, List<Passenger>> entry : s.train.entrySet()) {
+                if (entry.getValue().contains(curr_passenger)) {
+                  curr_station = s;
+                  curr_train = entry.getKey();
+                  break;
+                }
+              }
+            }
+          }
         }
 
-        System.out.println(next_passenger_station);
-
-//        if(mbta.lines.get(curr_train.toString()).indexOf(curr_station.toString()) < mbta.lines.get(curr_train.toString()).size() -1) {
-//          int next_idx = mbta.lines.get(curr_train.toString()).indexOf(curr_station.toString()) + 1;
-//          next_station = Station.make(mbta.lines.get(curr_train.toString()).get(next_idx));
-//        } else {
-//          int prev_idx = mbta.lines.get(curr_train.toString()).indexOf(curr_station.toString()) - 1;
-//          next_station = Station.make(mbta.lines.get(curr_train.toString()).get(prev_idx));
-//        }
-//        System.out.println("Next Passenger Station: " + next_passenger_station);
-
-        // Iterate through mbta.lines, check if the next destination on a line && that line not contain curr station
-        // If not, set should onboard new line to true
+        // Get the correct current waiting train
         for(Map.Entry<String, List<String>> entry : mbta.lines.entrySet()) {
-          if(entry.getValue().get(entry.getValue().indexOf(curr_station.toString())+1).equals(next_passenger_station)) {
+          String next_station_passenger = mbta.trips.get(curr_passenger.toString()).get(mbta.trips.get(curr_passenger.toString()).indexOf(curr_station.toString()) + 1);
+          if(entry.getValue().contains(next_station_passenger)) {
+            should_onboard_newline = true;
             curr_train = Train.make(entry.getKey());
-            break;
           }
         }
 
-        curr_station.lock.lock();
 
-        while (curr_station.train.isEmpty()) {
-          try {
-            curr_station.cond.await();
-          } catch (InterruptedException e) {
-            throw new RuntimeException(e);
+        if (curr_train != null) {
+
+          if(mbta.lines.get(curr_train.toString()).indexOf(curr_station.toString()) < mbta.lines.get(curr_train.toString()).size() -1) {
+            int next_idx = mbta.lines.get(curr_train.toString()).indexOf(curr_station.toString()) + 1;
+            next_train_station = Station.make(mbta.lines.get(curr_train.toString()).get(next_idx));
+          } else {
+            int prev_idx = mbta.lines.get(curr_train.toString()).indexOf(curr_station.toString()) - 1;
+            next_train_station = Station.make(mbta.lines.get(curr_train.toString()).get(prev_idx));
           }
-        }
 
-        boolean check_if_passenger_has_trips = mbta.trips.get(curr_passenger.toString()).size() > 1;
-        boolean check_if_passenger_contains_cur_station = mbta.trips.get(curr_passenger.toString()).contains(curr_station.toString());
-        System.out.println(check_if_passenger_contains_cur_station);
-        System.out.println(check_if_passenger_has_trips);
+          curr_station.lock.lock();
 
-        System.out.println("Passenger: " + passenger + " | Current Station: " + curr_station + " | Current Train: " + curr_train);
-        System.out.println("Train at the station: " + curr_station.train);
-        System.out.println(check_if_passenger_contains_cur_station);
-        System.out.println(check_if_passenger_has_trips);
-        System.out.println(curr_train.equals(new ArrayList<>(curr_station.train.keySet()).get(0)));
-        if (!curr_station.train.isEmpty() && check_if_passenger_has_trips && check_if_passenger_contains_cur_station
-                && curr_train.equals(new ArrayList<>(curr_station.train.keySet()).get(0))) {
+          while (curr_station.train.isEmpty()) {
+            try {
+              curr_station.cond.await();
+            } catch (InterruptedException e) {
+              throw new RuntimeException(e);
+            }
+          }
+          System.out.println(curr_station + " " + curr_station.train);
+          System.out.println(curr_station.train.get(curr_train));
+
+
+
+          System.out.println("Passenger: " + curr_passenger + " waiting for " + curr_train + " at " + curr_station);
+          System.out.println(curr_train + " is moving to: " + next_train_station);
+
+
+          if (!curr_station.train.isEmpty() && mbta.trips.get(curr_passenger.toString()).size() > 1
+                  && mbta.trips.get(curr_passenger.toString()).contains(curr_station.toString())) {
             log.passenger_boards(curr_passenger, curr_train, curr_station);
-            curr_station.train.get(curr_train).add(passenger);
             curr_station.passengers.remove(passenger);
+            curr_station.train.get(curr_train).add(passenger);
+            this.is_recent_onboard = true;
 
+            // put synchronized if needed
             mbta.trips.get(curr_passenger.toString()).remove(curr_station.toString());
 
           }
@@ -103,64 +106,23 @@ public class Sim {
           curr_station.lock.unlock();
 
 
-//        if (curr_station == null || curr_train == null) {
-//          for (Station s : mbta.curr_mbta_state) {
-//            if (!s.train.isEmpty() && s.train != null) {
-//              for (Map.Entry<Train, List<Passenger>> entry : s.train.entrySet()) {
-//                if (entry.getValue().contains(curr_passenger) && entry.getKey() != null) {
-//                  curr_station = s;
-//                  curr_train = entry.getKey();
-//                }
-//              }
-//            }
-//          }
-//          System.out.println("Current train: " + curr_train);
-//          System.out.println("Current station: " + curr_station);
-//        }
+          next_train_station.lock.lock();
+          while (!next_train_station.train.containsKey(curr_train)) {
+            try {
+              next_train_station.cond.await();
+            } catch (InterruptedException e) {
+              throw new RuntimeException(e);
+            }
+          }
 
-
-//          curr_station.lock.lock();
-//
-//          while (curr_station.train.isEmpty()) {
-//            try {
-//              curr_station.cond.await();
-//            } catch (InterruptedException e) {
-//              throw new RuntimeException(e);
-//            }
-//          }
-//          System.out.println(curr_passenger.toString() + mbta.trips.get(curr_passenger.toString()) + "Next Station: " + next_station);
-//          System.out.println("Current Passenger: " + curr_passenger + " Current Train: " + curr_train + " Curr Station: " + curr_station);
-//          if (!curr_station.train.isEmpty() && mbta.trips.get(curr_passenger.toString()).size() > 1
-//                  && mbta.trips.get(curr_passenger.toString()).contains(curr_station.toString()) ) {
-//            log.passenger_boards(curr_passenger, curr_train, curr_station);
-//            curr_station.passengers.remove(passenger);
-//            curr_station.train.get(curr_train).add(passenger);
-//
-//            mbta.trips.get(curr_passenger.toString()).remove(curr_station.toString());
-//
-//          }
-//
-//          curr_station.cond.signalAll();
-//          curr_station.lock.unlock();
-//
-//
-//          next_station.lock.lock();
-//          while (!next_station.train.containsKey(curr_train)) {
-//            try {
-//              next_station.cond.await();
-//            } catch (InterruptedException e) {
-//              throw new RuntimeException(e);
-//            }
-//          }
-//          System.out.println();
-//          if ((mbta.trips.get(curr_passenger.toString()).size() == 1 && curr_station.toString().equals(mbta.trips.get(curr_passenger.toString()).get(0)))) {
-//            log.passenger_deboards(curr_passenger, curr_train, curr_station);
-//            return;
-//          }
-//          next_station.cond.signalAll();
-//          next_station.lock.unlock();
-//        }
-//      }
+          if ((mbta.trips.get(curr_passenger.toString()).size() == 1 && curr_station.toString().equals(mbta.trips.get(curr_passenger.toString()).get(0)))
+          & !this.is_recent_onboard) {
+            log.passenger_deboards(curr_passenger, curr_train, curr_station);
+            return;
+          }
+          next_train_station.cond.signalAll();
+          next_train_station.lock.unlock();
+        }
       }
     }
   }
@@ -209,9 +171,6 @@ public class Sim {
           }
         }
 
-
-//        next_station = this.mbta.curr_mbta_state.get(mbta.curr_mbta_state.indexOf(curr_station) + 1);
-
         curr_station.lock.lock();
         try {
           Thread.sleep(500);
@@ -242,11 +201,11 @@ public class Sim {
 
         next_station.lock.unlock();
         curr_station.lock.unlock();
-//        try {
-//          Thread.sleep(500);
-//        } catch (InterruptedException e) {
-//          return;
-//        }
+        try {
+          Thread.sleep(500);
+        } catch (InterruptedException e) {
+          return;
+        }
       }
     }
   }
