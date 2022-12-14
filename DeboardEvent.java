@@ -26,16 +26,14 @@ public class DeboardEvent implements Event {
     System.out.println(mbta.trips);
     if(!mbta.curr_mbta_state.isEmpty()) {
       String destination_station = mbta.trips.get(p.toString()).get(mbta.trips.get(p.toString()).size()-1);
-      if (destination_station.equals(s.toString()) ||
-              !mbta.lines.get(t.toString()).contains(mbta.trips.get(p.toString()).get(mbta.trips.get(p.toString()).indexOf(s.toString()) + 1))) {
+      if (destination_station.equals(s.toString()) && s.train.containsKey(t) && s.train.get(t).contains(p)) {
         mbta.curr_mbta_state.get(mbta.curr_mbta_state.indexOf(s)).passengers.add(p);
-        if(mbta.curr_mbta_state.get(mbta.curr_mbta_state.indexOf(s)).train.get(t) != null) {
-          mbta.curr_mbta_state.get(mbta.curr_mbta_state.indexOf(s)).train.get(t).remove(p);
-        }
+        mbta.curr_mbta_state.get(mbta.curr_mbta_state.indexOf(s)).train.get(t).remove(p);
       } else {
         throw new RuntimeException();
       }
-    } else {
+    } else if(mbta.trips.isEmpty() && mbta.lines.isEmpty() && mbta.curr_mbta_state.isEmpty()){}
+    else {
       throw new RuntimeException();
     }
   }

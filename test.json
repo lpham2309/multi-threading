@@ -4,6 +4,6 @@
     "orange": [ "Ruggles", "Davis", "State" ]
   },
   "trips": {
-    "Carol": [ "Ruggles", "Davis", "Kendall" ]
+    "Carol": ["State", "Davis", "Kendall" ]
   }
 }

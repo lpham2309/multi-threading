@@ -22,39 +22,28 @@ public class MoveEvent implements Event {
   }
   public void replayAndCheck(MBTA mbta) {
     System.out.println(mbta.curr_mbta_state);
-    System.out.println("Current Station: " + s1);
-    System.out.println("Next Station: " + s2);
-    System.out.println("Current Train: " + t);
-    System.out.println("Current Station Train: " + s1.train);
-    System.out.println("Next Station Train: " + s2.train);
+    System.out.println(mbta.lines);
+    System.out.println(mbta.trips);
     if (!mbta.curr_mbta_state.isEmpty()) {
-      System.out.println(mbta.lines.get(t.toString()).indexOf(s2.toString()) - mbta.lines.get(t.toString()).indexOf(s1) > 1);
-      System.out.println(mbta.curr_mbta_state.indexOf(s1) == mbta.curr_mbta_state.size());
-      System.out.println(mbta.lines.get(t.toString()).indexOf(s2.toString()) - mbta.lines.get(t.toString()).indexOf(s1.toString()) < -1);
-      if ((mbta.lines.get(t.toString()).indexOf(s2.toString()) - mbta.lines.get(t.toString()).indexOf(s1.toString()) > 1) ||
-              (mbta.curr_mbta_state.indexOf(s1) == mbta.curr_mbta_state.size()
-                      && mbta.lines.get(t.toString()).indexOf(s2.toString()) - mbta.lines.get(t.toString()).indexOf(s1.toString()) < -1)) {
+      if ((mbta.lines.get(t.toString()).indexOf(s2.toString()) - mbta.lines.get(t.toString()).indexOf(s1.toString())) > 1 ||
+              (mbta.lines.get(t.toString()).indexOf(s2.toString()) - mbta.lines.get(t.toString()).indexOf(s1.toString())) < -1) {
         throw new RuntimeException();
       } else if (s1.equals(s2)) {
         throw new RuntimeException();
-//      } else if (!mbta.curr_mbta_state.get(mbta.curr_mbta_state.indexOf(s1)).train.containsKey(t)) {
-//        System.out.println(mbta.curr_mbta_state.get(mbta.curr_mbta_state.indexOf(s1)).train);
-//        throw new RuntimeException();
+      } else if (!mbta.curr_mbta_state.get(mbta.curr_mbta_state.indexOf(s1)).train.containsKey(t)) {
+        throw new RuntimeException();
       } else if (s2.train.isEmpty()) {
         Station next_train = mbta.curr_mbta_state.get(mbta.curr_mbta_state.indexOf(s2));
         Station curr_train = mbta.curr_mbta_state.get(mbta.curr_mbta_state.indexOf(s1));
         Map<Train, List<Passenger>> next_train_info = next_train.train;
-//        Map<Train, List<Passenger>> curr_train_info = curr_train.train;
-        List<Passenger> curr_train_info = s1.train.get(curr_train.toString());
-        mbta.curr_mbta_state.get(mbta.curr_mbta_state.indexOf(s2)).train.put(t, curr_train_info);
+        Map<Train, List<Passenger>> curr_train_info = curr_train.train;
+        mbta.curr_mbta_state.get(mbta.curr_mbta_state.indexOf(s2)).train.putAll(curr_train_info);
         mbta.curr_mbta_state.get(mbta.curr_mbta_state.indexOf(s1)).train.clear();
-      } else {
-        throw new UnsupportedOperationException();
+      } else if (s2.train.isEmpty()) {
+        throw new RuntimeException();
       }
-//      else if (!s2.train.isEmpty()) {
-//        throw new RuntimeException();
-//      }
-    }else {
+    } else if(mbta.curr_mbta_state.isEmpty()){}
+    else {
       throw new RuntimeException();
     }
   }

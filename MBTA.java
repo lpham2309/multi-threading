@@ -112,7 +112,7 @@ public class MBTA {
   public void checkEnd() {
     if(!this.curr_mbta_state.isEmpty()) {
       for(Map.Entry<String, List<String>> entry : this.passenger_trip_tracker.entrySet()) {
-        if(entry.getValue().size() != 1) {
+        if(entry.getValue().size() != 0) {
           throw new RuntimeException();
         }
       }
