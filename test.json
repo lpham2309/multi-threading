@@ -1,0 +1,9 @@
+{
+  "lines": {
+    "red": [ "Davis", "Harvard", "Kendall" ],
+    "orange": [ "Ruggles", "Davis", "State" ]
+  },
+  "trips": {
+    "Carol": [ "Davis", "Harvard" ]
+  }
+}
