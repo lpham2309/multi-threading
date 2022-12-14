@@ -27,7 +27,7 @@ public class BoardEvent implements Event {
     if(!mbta.curr_mbta_state.isEmpty()) {
 
 //      String curr_train_color = new ArrayList<>(s.train.keySet()).get(0).toString();
-      if (mbta.curr_mbta_state.get(mbta.curr_mbta_state.indexOf(s)).passengers.contains(p)) {
+      if (mbta.curr_mbta_state.get(mbta.curr_mbta_state.indexOf(s)).waiting_passengers.contains(p)) {
         if(mbta.curr_mbta_state.get(mbta.curr_mbta_state.indexOf(s)).train.get(t) == null) {
           List<Passenger> new_passenger = new ArrayList<>();
           new_passenger.add(p);
@@ -35,7 +35,7 @@ public class BoardEvent implements Event {
         } else {
           mbta.curr_mbta_state.get(mbta.curr_mbta_state.indexOf(s)).train.get(t).add(p);
         }
-        mbta.curr_mbta_state.get(mbta.curr_mbta_state.indexOf(s)).passengers.remove(p);
+        mbta.curr_mbta_state.get(mbta.curr_mbta_state.indexOf(s)).waiting_passengers.remove(p);
         mbta.passenger_trip_tracker.get(p.toString()).remove(s.toString());
       } else {
         throw new RuntimeException("Error with boarding");

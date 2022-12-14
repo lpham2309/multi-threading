@@ -9,8 +9,10 @@ import java.util.concurrent.locks.ReentrantLock;
 public class Station extends Entity {
   Lock lock = new ReentrantLock();
   Condition cond = lock.newCondition();
+
+  Train boardingTrain = null;
   Map<Train, List<Passenger>> train = new HashMap<>();
-  List<Passenger> passengers = new ArrayList<>();
+  List<Passenger> waiting_passengers = new ArrayList<>();
   private Station(String name) {
     super(name);
   }

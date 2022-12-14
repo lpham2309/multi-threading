@@ -28,7 +28,7 @@ public class DeboardEvent implements Event {
       String destination_station = mbta.trips.get(p.toString()).get(mbta.trips.get(p.toString()).size()-1);
       if (destination_station.equals(s.toString()) ||
               !mbta.lines.get(t.toString()).contains(mbta.trips.get(p.toString()).get(mbta.trips.get(p.toString()).indexOf(s.toString()) + 1))) {
-        mbta.curr_mbta_state.get(mbta.curr_mbta_state.indexOf(s)).passengers.add(p);
+        mbta.curr_mbta_state.get(mbta.curr_mbta_state.indexOf(s)).waiting_passengers.add(p);
         if(mbta.curr_mbta_state.get(mbta.curr_mbta_state.indexOf(s)).train.get(t) != null) {
           mbta.curr_mbta_state.get(mbta.curr_mbta_state.indexOf(s)).train.get(t).remove(p);
         }

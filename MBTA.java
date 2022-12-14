@@ -70,8 +70,8 @@ public class MBTA {
         Set<Train> curr_train = this.curr_mbta_state.get(this.curr_mbta_state.indexOf(initial_station)).train.keySet();
         List<Train> converted_curr_train = new ArrayList<>(curr_train);
 //        this.curr_mbta_state.get(this.curr_mbta_state.indexOf(initial_station)).train.get(converted_curr_train.get(0)).add(passenger);
-        if(!this.curr_mbta_state.get(this.curr_mbta_state.indexOf(initial_station)).passengers.contains(passenger)){
-          this.curr_mbta_state.get(this.curr_mbta_state.indexOf(initial_station)).passengers.add(passenger);
+        if(!this.curr_mbta_state.get(this.curr_mbta_state.indexOf(initial_station)).waiting_passengers.contains(passenger)){
+          this.curr_mbta_state.get(this.curr_mbta_state.indexOf(initial_station)).waiting_passengers.add(passenger);
         }
       }
     }
@@ -93,8 +93,8 @@ public class MBTA {
             System.out.println("1");
             throw new RuntimeException();
           }
-          for (Passenger p : s.passengers) {
-            if (s.passengers.size() == 0 && !s.toString().equals(this.trips.get(p.toString()).get(0))) {
+          for (Passenger p : s.waiting_passengers) {
+            if (s.waiting_passengers.size() == 0 && !s.toString().equals(this.trips.get(p.toString()).get(0))) {
               System.out.println("2");
               throw new RuntimeException();
             }
@@ -162,14 +162,14 @@ public class MBTA {
         Passenger passenger = Passenger.make(entry.getKey());
         String initial_station_each_line = entry.getValue().get(0);
         Station initial_station = Station.make(initial_station_each_line);
-        if(!this.curr_mbta_state.get(this.curr_mbta_state.indexOf(initial_station)).passengers.contains(passenger)){
-          this.curr_mbta_state.get(this.curr_mbta_state.indexOf(initial_station)).passengers.add(passenger);
+        if(!this.curr_mbta_state.get(this.curr_mbta_state.indexOf(initial_station)).waiting_passengers.contains(passenger)){
+          this.curr_mbta_state.get(this.curr_mbta_state.indexOf(initial_station)).waiting_passengers.add(passenger);
         }
       }
       System.out.println(this.curr_mbta_state);
       for(Station s : this.curr_mbta_state){
         System.out.println(s + " " + s.train);
-        System.out.println(s + " " + s.passengers);
+        System.out.println(s + " " + s.waiting_passengers);
       }
       System.out.println(this.lines);
       System.out.println(this.trips);
